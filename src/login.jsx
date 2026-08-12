@@ -5,7 +5,7 @@ function App() {
   
   const [page, setPage] = useState("home");
 
-
+  const [errorMsg, setErrorMsg] = useState("");
   const [role, setRole] = useState("");
 
   
@@ -14,27 +14,43 @@ function App() {
 
 
   function openLogin(roleName) {
-    setRole(roleName);
-    setPage("login");
-  }
+  setRole(roleName);
+  setUsername("");     
+  setPassword("");      
+  setErrorMsg("");       
+  setPage("login");
+}
 
  
   function handleLogin() {
-    
-    if (username === "" || password === "") {
-      alert("Please enter username and password");
-      return;
-    }
-    alert("logging in as " + role + " with username: " + username);
-    
+  if (username === "" || password === "") {
+    setErrorMsg("Please enter username and password");
+    return;
   }
+
+  fetch("http://localhost/canteen_mgmt_backend/login.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password, role })
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        setErrorMsg("");
+        alert("welcome " + role);
+      } else {
+        setErrorMsg(data.message);
+      }
+    })
+    .catch((err) => console.log("error:", err));
+}
 
   return (
     <div className="page">
       {page === "home" && (
         <div className="center">
           <p className="tag">
-            <span className="dot">●</span> CANTEEN MANAGEMENT SYSTEM
+            CANTEEN MANAGEMENT SYSTEM
           </p>
           <h1 className="heading">Pick your role.</h1>
 
@@ -72,9 +88,14 @@ function App() {
       {page === "login" && (
         <div className="center">
           <div className="loginBox">
-            <button className="backBtn" onClick={() => setPage("home")}>
-                <FaArrowLeft size={12} /> Back
-            </button>
+            <button className="backBtn" onClick={() => {
+  setUsername("");
+  setPassword("");
+  setErrorMsg("");
+  setPage("home");
+}}>
+  <FaArrowLeft size={12} /> Back
+</button>
 
             <h2 className="loginHeading">{role} Login</h2>
 
@@ -95,7 +116,7 @@ function App() {
               placeholder="Enter Password"
               className="input"
             />
-
+            {errorMsg && <p className="errorText">{errorMsg}</p>}
             <button className="loginBtn" onClick={handleLogin}>
               Login
             </button>
